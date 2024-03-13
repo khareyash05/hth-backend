@@ -8,7 +8,7 @@ module.exports = {
     create: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const admin = decoded.user_id;
             const {
                 name,
@@ -71,7 +71,7 @@ module.exports = {
     update: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const id = req.params.id;
             const admin = decoded.user_id;
             const hackathonData = await hackathon.findOne({
@@ -106,7 +106,7 @@ module.exports = {
     delete: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const hackathonId = req.params.id;
             const admin = decoded.user_id;
             const hackathonData = await hackathon.findOne({
@@ -261,7 +261,7 @@ module.exports = {
             const id = req.params.id;
             const { title, description } = req.body;
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
 
             const hackathonData = await hackathon.find({
@@ -295,7 +295,7 @@ module.exports = {
             const annoucementId = req.body.annoucementId;
             const { title, description, time } = req.body;
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
 
             const hackathonData = await hackathon.find({
@@ -328,7 +328,7 @@ module.exports = {
             const id = req.params.id;
             const annoucementId = req.body.annoucementId;
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
 
             const hackathonData = await hackathon.find({
@@ -359,7 +359,7 @@ module.exports = {
             const id = req.params.id;
             const { teamId } = req.body;
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
 
             const hackathonData = await hackathon.find({
@@ -389,7 +389,7 @@ module.exports = {
             const id = req.params.id;
             const { teamId } = req.body;
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
 
             const hackathonData = await hackathon.find({
@@ -418,7 +418,7 @@ module.exports = {
     addJudge: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
             const id = req.params.id;
             const { email } = req.body;
@@ -477,7 +477,7 @@ module.exports = {
     deleteJudge: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
             const id = req.params.id;
             const { judgeId } = req.body;

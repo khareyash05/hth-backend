@@ -9,7 +9,7 @@ module.exports = {
     register: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
             const { name, hackathon_id } = req.body;
             if (!name || !hackathon_id) {
@@ -73,7 +73,7 @@ module.exports = {
     update: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
             const team_id = req.params.id;
             const teamData = await team.findById(team_id);
@@ -125,7 +125,7 @@ module.exports = {
     leaveTeam: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const team_id = req.params.id;
             const user_id = decoded.user_id;
             const hackathon_id = req.body.hackathon_id;
@@ -187,7 +187,7 @@ module.exports = {
     deleteTeam: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
             const team_id = req.params.id;
             const hackathon_id = req.body.hackathon_id;
@@ -253,7 +253,7 @@ module.exports = {
             const { hackathon_id, email } = req.body;
             const team_id = req.params.id;
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
             const teamData = await team.findById(team_id);
             if (!teamData) {
@@ -298,7 +298,7 @@ module.exports = {
     acceptInvite: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
             const team_id = req.params.id;
             const hackathon_id = req.body.hackathon_id;

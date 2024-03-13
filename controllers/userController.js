@@ -7,7 +7,7 @@ module.exports = {
     getUser: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const id = decoded.user_id;
             const userData = await user
                 .findById(id, "-password -__v")
@@ -33,7 +33,7 @@ module.exports = {
     editUser: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const id = decoded.user_id;
             const { first_name, last_name, email } = req.body;
             const userData = await user.findByIdAndUpdate(
@@ -51,7 +51,7 @@ module.exports = {
     getOrganisedHackathons: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const id = decoded.user_id;
             const userData = await user
                 .findById(id, "-password -__v")
@@ -66,7 +66,7 @@ module.exports = {
     getParticpatedHackathons: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const id = decoded.user_id;
             const userData = await user
                 .findById(id, "-password -__v")
@@ -81,7 +81,7 @@ module.exports = {
     getJudgedHackathons: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const id = decoded.user_id;
             const userData = await user
                 .findById(id, "-password -__v")

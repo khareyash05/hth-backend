@@ -7,7 +7,7 @@ module.exports = {
     getSubmissions: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const id = req.params.id;
             const hackathonData = await hackathon
                 .findOne({
@@ -41,7 +41,7 @@ module.exports = {
     addReview: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
             const id = req.params.id;
             const { team_id, review, score } = req.body;

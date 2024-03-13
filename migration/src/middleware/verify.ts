@@ -12,7 +12,7 @@ export const middleware = {
                 .send({ message: "A token is required for authentication" });
         }
         try {
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             req.user = decoded;
         } catch (err) {
             debug(err)

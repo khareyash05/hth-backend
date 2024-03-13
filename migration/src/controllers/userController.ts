@@ -8,7 +8,7 @@ export const UserController = {
     getUser: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload as jwt.JwtPayload;
             const id = decoded.user_id;
             const userData = await users
                 .findById(id, "-password -__v")
@@ -34,7 +34,7 @@ export const UserController = {
     editUser: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const id = decoded.user_id;
             const { first_name, last_name, email } = req.body;
             const userData = await db.update(users).set({
@@ -52,7 +52,7 @@ export const UserController = {
     getOrganisedHackathons: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const id = decoded.user_id;
             const userData = await users
                 .findById(id, "-password -__v")
@@ -67,7 +67,7 @@ export const UserController = {
     getParticpatedHackathons: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const id = decoded.user_id;
             const userData = await users
                 .findById(id, "-password -__v")
@@ -82,7 +82,7 @@ export const UserController = {
     getJudgedHackathons: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const id = decoded.user_id;
             const userData = await users
                 .findById(id, "-password -__v")

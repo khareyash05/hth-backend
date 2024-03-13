@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 import * as jwt from 'jsonwebtoken'
-import { hackathons, teams } from '../models/schema';
+import { hackathons, teams, users } from '../models/schema';
 import { db } from '../config/db';
 import { eq } from 'drizzle-orm';
 const debug = require("debug")("hackthethon:TeamController");
@@ -9,7 +9,7 @@ export const TeamController = {
     register: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
             const { name, hackathon_id } = req.body;
             if (!name || !hackathon_id) {
@@ -27,37 +27,21 @@ export const TeamController = {
                 });
             }
 
-            const newTeam = await db.insert(teams).values([
-                name,
+            const newTeamId = await db.insert(teams).values({
+                name: name,
                 members_id: [user_id],
                 hackathon_id
-            ]) 
+            }).returning({id:teams.id}) 
             try {
-                await hackathon.findByIdAndUpdate(
-                    hackathon_id,
-                    {
-                        $push: {
-                            teams: newTeam._id,
-                        },
-                    },
-                    { new: true }
-                );
+                db.update(hackathons).set(hackathons.teams_id.push(newTeamId)).where(eq(hackathons.id,hackathon_id))
             } catch (err) {
                 res.status(500).send({ message: "Something Went wrong" });
                 debug(err);
             }
 
             try {
-                await user.findByIdAndUpdate(
-                    user_id,
-                    {
-                        $push: {
-                            teams: newTeam._id,
-                            hackathonsParticipated: hackathon_id,
-                        },
-                    },
-                    { new: true }
-                );
+                db.update(users).set(users.teams_id.push(newTeamId)).where(eq(users.id,user_id))
+                db.update(users).set(users.hackathonsParticipated_id.push(hackathon_id)).where(eq(users.id,user_id))
             } catch (err) {
                 res.status(500).send({ message: "Something Went wrong" });
                 debug(err);
@@ -72,7 +56,7 @@ export const TeamController = {
     update: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
             const team_id = req.params.id;
             const teamData = await db.select().from(teams).where(eq(teams.id,team_id))
@@ -81,7 +65,7 @@ export const TeamController = {
                     message: "Team does not exist",
                 });
             }
-            if (!teamData.members.includes(user_id)) {
+            if (!teamData[0].members_id.includes(user_id)) {
                 return res.status(409).send({
                     message: "You are not teams member",
                 });
@@ -112,7 +96,7 @@ export const TeamController = {
     leaveTeam: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const team_id = req.params.id;
             const user_id = decoded.user_id;
             const hackathon_id = req.body.hackathon_id;
@@ -131,9 +115,9 @@ export const TeamController = {
                 },
                 { new: true }
             );
-            if (teamData.members.length === 0) {
+            if (teamData[0].members_id.length === 0) {
                 try {
-                    await hackathon.findByIdAndUpdate(
+                    await hackathons.findByIdAndUpdate(
                         hackathon_id,
                         {
                             $pull: {
@@ -174,7 +158,7 @@ export const TeamController = {
     deleteTeam: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
             const team_id = req.params.id;
             const hackathon_id = req.body.hackathon_id;
@@ -187,8 +171,8 @@ export const TeamController = {
                 });
             }
             if (
-                hackathonData.admin.toString() !== user_id &&
-                !teamData.members.includes(user_id)
+                hackathonData[0].admin_id.toString() !== user_id &&
+                !teamData[0].members_id.includes(user_id)
             ) {
                 return res.status(409).send({
                     message: "You are not admin or part of this teams",
@@ -196,7 +180,7 @@ export const TeamController = {
             }
 
             try {
-                await hackathon.findByIdAndUpdate(
+                await hackathons.findByIdAndUpdate(
                     hackathon_id,
                     {
                         $pull: {
@@ -210,7 +194,7 @@ export const TeamController = {
                 debug(err);
             }
             try {
-                await user.updateMany(
+                await users.updateMany(
                     {
                         teams: team_id,
                     },
@@ -240,7 +224,7 @@ export const TeamController = {
             const { hackathon_id, email } = req.body;
             const team_id = req.params.id;
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
             const teamData = await db.select().from(teams).where(eq(teams.id,team_id))
             if (!teamData) {
@@ -248,7 +232,7 @@ export const TeamController = {
                     message: "Team does not exist",
                 });
             }
-            if (!teamData.members.includes(user_id)) {
+            if (!teamData[0].members_id.includes(user_id)) {
                 return res.status(409).send({
                     message: "You are not a teams member",
                 });
@@ -268,7 +252,7 @@ export const TeamController = {
                 from: process.env.EMAIL_ID,
                 to: email,
                 subject: "Invitation to join teams",
-                html: `<p>You have been invited to join teams ${teamData.name} for a hackathon. Click <a href="${inviteURL}">here</a> to join the teams.</p>`,
+                html: `<p>You have been invited to join teams ${teamData[0].name} for a hackathon. Click <a href="${inviteURL}">here</a> to join the teams.</p>`,
             };
 
             await transporter.sendMail(mailOptions);
@@ -285,7 +269,7 @@ export const TeamController = {
     acceptInvite: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
             const team_id = req.params.id;
             const hackathon_id = req.body.hackathon_id;
@@ -296,21 +280,14 @@ export const TeamController = {
                 });
             }
             try {
-                await teams.findByIdAndUpdate(
-                    team_id,
-                    {
-                        $addToSet: {
-                            members: user_id,
-                        },
-                    },
-                    { new: true }
-                );
+                db.update(teams).set(teams.members_id.push(user_id)).where(eq(teams.id,team_id))
             } catch (err) {
                 res.status(500).send({ message: "Something Went wrong" });
                 debug(err);
             }
             try {
-                await user.findByIdAndUpdate(
+                db.update(teams).set(teams.members_id.push(user_id)).where(eq(teams.id,team_id))
+                await users.findByIdAndUpdate(
                     user_id,
                     {
                         $addToSet: {

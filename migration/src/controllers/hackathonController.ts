@@ -1,6 +1,6 @@
 const debug = require("debug")("hackthethon:HackathonController");
 import * as jwt from 'jsonwebtoken'
-import { users,teams,hackathons } from "../models/schema";
+import { users,teams,hackathons, rules, problem_statements } from "../models/schema";
 import { db } from '../config/db';
 import { and, eq , or } from 'drizzle-orm';
 
@@ -8,7 +8,7 @@ export const HackathonController = {
     create: async (req, res) => {
         try {
             const token:string = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const admin = decoded.user_id;
             const {
                 name,
@@ -33,7 +33,7 @@ export const HackathonController = {
                 });
             }
 
-            const newHackathon = await db.insert(hackathons).values({
+            const newHackathonId = await db.insert(hackathons).values({
                 name: name,
                 start_date: start_date,
                 end_date: end_date,
@@ -46,9 +46,9 @@ export const HackathonController = {
                 min_team_size: min_team_size,
                 venue: venue,
                 theme: theme,
-            });
+            }).returning({id:hackathons.id});
             try {
-                await db.update(users).set({hackathonsOrganized:newHackathon.id}).where(eq(users.id,admin))
+                await db.update(users).set({hackathonsOrganized:newHackathonId}).where(eq(users.id,admin))
             } catch (err) {
                 res.status(500).send({ message: "Something Went wrong" });
                 debug(err); 
@@ -63,12 +63,12 @@ export const HackathonController = {
     update: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const id = req.params.id;
             const admin = decoded.user_id;
             const hackathonData = await db.select().from(hackathons).where(and(eq(hackathons.admin,admin),eq(hackathons.id,id)))
 
-            if (!hackathonData) {
+            if (!hackathonData[0]) {
                 return res.status(404).send({
                     message: "Hackathon not found or you're not the admin.",
                 });
@@ -79,10 +79,9 @@ export const HackathonController = {
 
             // Update the hackathons document based on the keys and values from the request body
             updates.forEach((update) => {
-                hackathonData[update] = req.body[update];
+                await db.update(hackathons).set(hackathonData[0][update] = req.body[update])
             });
 
-            await hackathonData.save();
             res.status(200).send({
                 message: "Hackathon updated successfully.",
             });
@@ -95,7 +94,7 @@ export const HackathonController = {
     delete: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const hackathonId = req.params.id;
             const admin = decoded.user_id;
             const hackathonData = await db.select().from(hackathons).where(and(
@@ -231,12 +230,17 @@ export const HackathonController = {
 
     getAll: async (req, res) => {
         try {
-            const hackathons = await db.select().from(hackathons)
-                .find()
+            const hackathonsData = await db.select().from(hackathons)
+                .with(
+                    rules: false,
+                    problem_statements:false,
+                    judges_id
+
+                )
                 .select(
                     "-rules -problem_statement -judges -teams -winners -announcements -admin -partners -faqs -__v"
                 );
-            res.status(200).send(hackathons);
+            res.status(200).send(hackathonsData);
         } catch (err) {
             res.status(500).send({ message: "Something Went wrong" });
             debug(err);
@@ -248,7 +252,7 @@ export const HackathonController = {
             const id = req.params.id;
             const { title, description } = req.body;
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
 
             const hackathonData = await db.select().from(hackathons).where(and(
@@ -282,7 +286,7 @@ export const HackathonController = {
             const annoucementId = req.body.annoucementId;
             const { title, description, time } = req.body;
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
 
             const hackathonData = await db.select().from(hackathons).where(and(
@@ -315,7 +319,7 @@ export const HackathonController = {
             const id = req.params.id;
             const annoucementId = req.body.annoucementId;
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
 
             const hackathonData = await db.select().from(hackathons).where(and(
@@ -346,7 +350,7 @@ export const HackathonController = {
             const id = req.params.id;
             const { teamId } = req.body;
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
 
             const hackathonData = await db.select().from(hackathons).where(and(
@@ -376,7 +380,7 @@ export const HackathonController = {
             const id = req.params.id;
             const { teamId } = req.body;
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
 
             const hackathonData = await db.select().from(hackathons).where(and(
@@ -390,8 +394,8 @@ export const HackathonController = {
                 });
             }
 
-            const winner = hackathonData.winners.id(teamId);
-            winner.remove();
+            const winner_id = hackathonData[0].winners_id == teamId;
+            hackathonData[0].winner_id.remove(winner_id)
             await hackathonData.save();
             res.status(200).send({
                 message: "Winner deleted successfully.",
@@ -405,7 +409,7 @@ export const HackathonController = {
     addJudge: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
             const id = req.params.id;
             const { email } = req.body;
@@ -464,7 +468,7 @@ export const HackathonController = {
     deleteJudge: async (req, res) => {
         try {
             const token = req.headers.authorization.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY) as jwt.JwtPayload;
             const user_id = decoded.user_id;
             const id = req.params.id;
             const { judgeId } = req.body;
